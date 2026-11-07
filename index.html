@@ -4,72 +4,510 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Frame-Level Pansori Mode Classification</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%221%22 y=%223%22 width=%229%22 height=%224%22 rx=%221%22 fill=%22%232a78d6%22/%3E%3Crect x=%2211%22 y=%223%22 width=%224%22 height=%224%22 rx=%221%22 fill=%22%23eb6834%22/%3E%3Crect x=%221%22 y=%229%22 width=%225%22 height=%224%22 rx=%221%22 fill=%22%231baf7a%22/%3E%3Crect x=%227%22 y=%229%22 width=%228%22 height=%224%22 rx=%221%22 fill=%22%23eb6834%22/%3E%3C/svg%3E">
+  <meta name="description" content="Demo for the paper Frame-Level Pansori Mode Classification with Complementary Audio Representations: listen to pansori excerpts and follow frame-level mode predictions.">
   <style>
     :root {
+      color-scheme: light;
       --bg: #faf8f5;
+      --surface: #ffffff;
       --fg: #1f1d1a;
       --muted: #6b665e;
       --accent: #b23a2a;
       --border: #e4dfd6;
+      --grid: #ece8e1;
+      --unknown: #c9c4bb;
+      --c-ujo: #2a78d6;
+      --c-gyemyeonjo: #eb6834;
+      --c-aniri: #1baf7a;
+      --c-changjo: #eda100;
+      --playhead: #1f1d1a;
     }
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
         --bg: #161514;
+        --surface: #1d1c1a;
         --fg: #ece8e1;
         --muted: #a39d93;
         --accent: #e0705f;
         --border: #2e2b28;
+        --grid: #2a2825;
+        --unknown: #4a4641;
+        --c-ujo: #3987e5;
+        --c-gyemyeonjo: #d95926;
+        --c-aniri: #199e70;
+        --c-changjo: #c98500;
+        --playhead: #ece8e1;
       }
     }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #161514;
+      --surface: #1d1c1a;
+      --fg: #ece8e1;
+      --muted: #a39d93;
+      --accent: #e0705f;
+      --border: #2e2b28;
+      --grid: #2a2825;
+      --unknown: #4a4641;
+      --c-ujo: #3987e5;
+      --c-gyemyeonjo: #d95926;
+      --c-aniri: #199e70;
+      --c-changjo: #c98500;
+      --playhead: #ece8e1;
+    }
     * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
       margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1rem;
       background: var(--bg);
       color: var(--fg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      line-height: 1.5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      line-height: 1.6;
     }
-    main {
-      max-width: 40rem;
-      text-align: center;
-    }
+    .wrap { max-width: 56rem; margin: 0 auto; padding: 0 16px; }
+    a { color: var(--accent); }
+
+    header.wrap { padding-top: 4rem; padding-bottom: 2.5rem; text-align: center; }
     h1 {
-      margin: 0 0 1.25rem;
-      font-size: clamp(1.75rem, 5vw, 2.75rem);
+      margin: 0 auto 1rem;
+      max-width: 40rem;
+      font-size: clamp(1.75rem, 5vw, 2.6rem);
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.2;
+      text-wrap: balance;
     }
-    .badge {
-      display: inline-block;
-      padding: 0.35rem 0.9rem;
+    .authors { margin: 0; color: var(--fg); font-size: 1.02rem; }
+    .links { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
+    .links a, .links span {
+      display: inline-flex; align-items: center;
+      padding: 0.4rem 1rem;
       border: 1px solid var(--accent);
       border-radius: 999px;
-      color: var(--accent);
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
+      font-size: 0.9rem; font-weight: 600;
+      text-decoration: none;
     }
-    footer {
-      margin-top: 2.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.85rem;
+    .links a { color: var(--accent); }
+    .links a:hover { background: var(--accent); color: var(--bg); }
+    .links span { border-color: var(--border); color: var(--muted); }
+
+    section { padding: 2.25rem 0; border-top: 1px solid var(--border); }
+    h2 { margin: 0 0 1rem; font-size: 1.4rem; letter-spacing: -0.01em; }
+    p { margin: 0 0 1rem; }
+    .lede { color: var(--muted); }
+
+    .classes { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.75rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
+    .classes li { border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 0.9rem; background: var(--surface); }
+    .classes .name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+    .classes .ko { color: var(--muted); font-weight: 400; }
+    .classes .desc { display: block; margin-top: 0.25rem; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+    .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+    .swatch.unknown { background: repeating-linear-gradient(135deg, var(--unknown) 0 2px, transparent 2px 4px); border: 1px solid var(--unknown); }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin: 0 0 1.25rem; font-size: 0.88rem; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+    .clip { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 1rem; margin-bottom: 1.25rem; }
+    .clip-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.25rem 1rem; margin-bottom: 0.75rem; }
+    .clip h3 { margin: 0; font-size: 1.05rem; line-height: 1.35; }
+    .clip .meta { color: var(--muted); font-size: 0.88rem; }
+    .clip .acc { font-variant-numeric: tabular-nums; font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+    .clip .acc b { color: var(--fg); }
+    .clip audio { width: 100%; height: 40px; margin-bottom: 0.5rem; }
+    .viz { position: relative; }
+    .viz canvas { display: block; width: 100%; cursor: pointer; touch-action: pan-y; }
+    .tip {
+      position: absolute; top: 0; pointer-events: none;
+      background: var(--surface); color: var(--fg);
+      border: 1px solid var(--border); border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      padding: 0.45rem 0.6rem; font-size: 0.8rem; line-height: 1.45;
+      white-space: nowrap; opacity: 0; transition: opacity 0.1s;
+      font-variant-numeric: tabular-nums;
+      z-index: 2;
     }
+    .tip.show { opacity: 1; }
+    .tip .row { display: flex; align-items: center; gap: 0.4rem; }
+    .tip .k { color: var(--muted); min-width: 4.6rem; }
+    .clip details { margin-top: 0.6rem; font-size: 0.85rem; color: var(--muted); }
+    .clip summary { cursor: pointer; }
+    .seglists { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.5rem 1.5rem; margin-top: 0.5rem; }
+    .seglists h4 { margin: 0 0 0.25rem; font-size: 0.85rem; color: var(--fg); }
+    .seglists ol { margin: 0; padding-left: 1.2rem; font-variant-numeric: tabular-nums; }
+
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+    th, td { padding: 0.55rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+    thead th .ko { display: block; font-weight: 400; }
+    tr.ens td { font-weight: 700; }
+    .best { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+    .note { color: var(--muted); font-size: 0.86rem; margin-top: 0.75rem; }
+
+    pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.5; }
+    footer.wrap { padding-top: 2rem; padding-bottom: 3rem; color: var(--muted); font-size: 0.85rem; }
+    footer.wrap::before { content: ""; display: block; border-top: 1px solid var(--border); margin-bottom: 2rem; }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Frame-Level Pansori Mode Classification</h1>
-    <span class="badge">Work in Progress</span>
-    <footer>Demo page &middot; coming soon</footer>
+  <header class="wrap">
+    <h1>Frame-Level Pansori Mode Classification with Complementary Audio Representations</h1>
+    <p class="authors">Sangheon Park, Seonguk Ju, Suin Chung, Danbinaerin Han, Dasaem Jeong</p>
+    <nav class="links" aria-label="Project links">
+      <span title="Link will be added when the paper is public">Paper (coming soon)</span>
+      <a href="https://github.com/michspark/Pansori-Mode-Classification">Code</a>
+      <a href="https://github.com/michspark/Pansori-Mode-Classification/releases/tag/v1.0">Data &amp; Weights</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>
+        A pansori performance moves between musical modes (<i>jo</i>, 조) as the story unfolds, and between sung
+        passages and spoken narration. Our model labels <b>every frame</b> of a recording with the mode being
+        performed, so mode-change boundaries fall out of the frame sequence instead of being predicted directly.
+      </p>
+      <p>
+        We compare seven input representations under one training pipeline, with identical splits and metrics:
+        waveform-derived (mel spectrogram, CQT, chroma), pitch contours (PESTO, CREPE), symbolic (a transcribed-MIDI
+        piano roll) and self-supervised features (CultureMERT-95M). The representations are complementary, and a
+        weighted soft vote across them works best. The examples below use the <b>Mel + PESTO + MIDI</b> ensemble.
+        Each stream runs at its own frame rate, so all three are pooled onto the slowest (MIDI, 10&nbsp;fps) before voting.
+      </p>
+      <ul class="classes" aria-label="Classes">
+        <li><span class="name"><span class="swatch" style="background:var(--c-ujo)"></span>Ujo <span class="ko">우조</span></span>
+          <span class="desc">Also covers gyeongdeureum, seolleongje and pyeongjo, which are folded into this class.</span></li>
+        <li><span class="name"><span class="swatch" style="background:var(--c-gyemyeonjo)"></span>Gyemyeonjo <span class="ko">계면조</span></span></li>
+        <li><span class="name"><span class="swatch" style="background:var(--c-aniri)"></span>Aniri <span class="ko">아니리</span></span>
+          <span class="desc">Spoken narration between sung passages.</span></li>
+        <li><span class="name"><span class="swatch" style="background:var(--c-changjo)"></span>Changjo <span class="ko">창조</span></span></li>
+      </ul>
+    </section>
+
+    <section id="examples">
+      <h2>Listen and follow the predictions</h2>
+      <p class="lede">
+        Four excerpts from recordings in the held-out test set. Press play and watch the playhead: the top band is the
+        annotated mode, the middle band is the ensemble's prediction, and the bottom strip shows the ensemble's class
+        probabilities. Click anywhere on the chart to jump to that moment.
+      </p>
+      <div class="legend" id="legend" aria-hidden="true"></div>
+      <div id="clips"><p class="note">Loading examples…</p></div>
+    </section>
+
+    <section id="results">
+      <h2>Results</h2>
+      <p class="lede">Frame-level results on the version-split test set (18 recordings, 101,683 frames at 10&nbsp;fps). Unknown frames are excluded.</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Accuracy</th>
+              <th scope="col">Macro F1</th>
+              <th scope="col">F1 Ujo<span class="ko">우조</span></th>
+              <th scope="col">F1 Gyemyeonjo<span class="ko">계면조</span></th>
+              <th scope="col">F1 Aniri<span class="ko">아니리</span></th>
+              <th scope="col">F1 Changjo<span class="ko">창조</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Mel</td><td>87.17%</td><td>0.863</td><td>0.773</td><td>0.893</td><td>0.973</td><td>0.812</td></tr>
+            <tr><td>PESTO (pitch contour)</td><td>79.29%</td><td>0.736</td><td>0.615</td><td>0.833</td><td>0.950</td><td>0.546</td></tr>
+            <tr><td>MIDI (transcribed)</td><td>77.03%</td><td>0.661</td><td>0.584</td><td>0.822</td><td>0.908</td><td>0.329</td></tr>
+            <tr class="ens"><td>Ensemble (Mel + PESTO + MIDI)</td><td class="best">87.93%</td><td class="best">0.876</td><td class="best">0.778</td><td class="best">0.901</td><td class="best">0.974</td><td class="best">0.851</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Ensemble weights: Mel 0.5, PESTO 0.1, MIDI 0.4. Underlined values are the best in each column. Song-stratified 10-fold results and the other representations are reported in the paper.</p>
+    </section>
+
+    <section id="run">
+      <h2>Run it on your own recordings</h2>
+      <p>Pretrained checkpoints are on the <a href="https://github.com/michspark/Pansori-Mode-Classification/releases/tag/v1.0">release page</a>. Each script writes one row per frame and prints the contiguous mode segments:</p>
+<pre><code>python infer/infer_ensemble.py \
+    --mel song.wav --pesto song.f0.csv --midi song.mid \
+    --weights 0.5 0.1 0.4</code></pre>
+      <p class="note">See the <a href="https://github.com/michspark/Pansori-Mode-Classification#readme">README</a> for installation, feature extraction and training.</p>
+    </section>
   </main>
+
+  <footer class="wrap">
+    <p>Audio excerpts are short clips from published recordings, shown here only to demonstrate the research. All rights remain with the original rights holders.</p>
+    <p>Code is released under the MIT License. &middot; <a href="https://github.com/michspark/Pansori-Mode-Classification">github.com/michspark/Pansori-Mode-Classification</a></p>
+  </footer>
+
+  <script>
+  (function () {
+    'use strict';
+    var CLASS = {
+      ujo:        { name: 'Ujo',        ko: '우조',   v: '--c-ujo' },
+      gyemyeonjo: { name: 'Gyemyeonjo', ko: '계면조', v: '--c-gyemyeonjo' },
+      aniri:      { name: 'Aniri',      ko: '아니리', v: '--c-aniri' },
+      changjo:    { name: 'Changjo',    ko: '창조',   v: '--c-changjo' },
+      unknown:    { name: 'Unlabeled',  ko: '',       v: '--unknown' }
+    };
+    var ORDER = ['ujo', 'gyemyeonjo', 'aniri', 'changjo'];
+    var ROWS = [
+      { key: 'gt',   label: 'Annotation', h: 26 },
+      { key: 'pred', label: 'Prediction', h: 26 },
+      { key: 'prob', label: 'Probability', h: 44 }
+    ];
+    var PAD_TOP = 4, GAP = 8, AXIS_H = 22, LABEL_W = 84, LABEL_W_NARROW = 0;
+
+    function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+    function fmt(t) { t = Math.max(0, t); var m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
+    function el(tag, attrs, html) { var e = document.createElement(tag); for (var k in attrs || {}) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; }
+    function inkOn(hex) {
+      var c = hex.replace('#', ''); if (c.length === 3) c = c.replace(/./g, '$&$&');
+      var rgb = [0, 2, 4].map(function (i) { var v = parseInt(c.substr(i, 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+      var L = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+      return (1.05 / (L + 0.05)) >= ((L + 0.05) / 0.05) ? '#ffffff' : '#1f1d1a';
+    }
+    function segAt(segs, t) { for (var i = 0; i < segs.length; i++) if (t >= segs[i][0] && t < segs[i][1]) return segs[i][2]; return segs.length ? segs[segs.length - 1][2] : 'unknown'; }
+
+    // legend
+    var legend = document.getElementById('legend');
+    ORDER.concat(['unknown']).forEach(function (k) {
+      var sw = k === 'unknown' ? '<span class="swatch unknown"></span>' : '<span class="swatch" style="background:var(' + CLASS[k].v + ')"></span>';
+      legend.appendChild(el('span', {}, sw + CLASS[k].name + (CLASS[k].ko ? ' ' + CLASS[k].ko : '')));
+    });
+
+    var players = [];
+
+    function Clip(ex, container) {
+      var self = this;
+      this.ex = ex;
+      var card = el('article', { 'class': 'clip' });
+      var head = el('div', { 'class': 'clip-head' });
+      var left = el('div');
+      left.appendChild(el('h3', {}, ex.title));
+      left.appendChild(el('div', { 'class': 'meta' }, ex.singer + ' &middot; excerpt ' + fmt(ex.source_offset_sec) + '–' + fmt(ex.source_offset_sec + ex.duration_sec) + ' of the track'));
+      head.appendChild(left);
+      head.appendChild(el('div', { 'class': 'acc' }, 'Frame accuracy <b>' + (ex.accuracy * 100).toFixed(1) + '%</b>'));
+      card.appendChild(head);
+
+      var audio = el('audio', { controls: '', preload: 'metadata', src: ex.audio });
+      audio.setAttribute('aria-label', 'Audio: ' + ex.title + ', ' + ex.singer);
+      card.appendChild(audio);
+      this.audio = audio;
+
+      var viz = el('div', { 'class': 'viz' });
+      var canvas = el('canvas', { role: 'img', 'aria-label': 'Timeline of annotated and predicted modes for this excerpt. A text list of segments follows.' });
+      var tip = el('div', { 'class': 'tip', 'aria-hidden': 'true' });
+      viz.appendChild(canvas); viz.appendChild(tip);
+      card.appendChild(viz);
+      this.canvas = canvas; this.tip = tip;
+
+      // text alternative
+      var det = el('details');
+      det.appendChild(el('summary', {}, 'Segment list'));
+      var lists = el('div', { 'class': 'seglists' });
+      [['Annotation', ex.gt_segments], ['Prediction', ex.pred_segments]].forEach(function (p) {
+        var d = el('div'); d.appendChild(el('h4', {}, p[0]));
+        var ol = el('ol');
+        p[1].filter(function (s) { return s[1] - s[0] >= 1; }).forEach(function (s) {
+          ol.appendChild(el('li', {}, fmt(s[0]) + '–' + fmt(s[1]) + ' ' + CLASS[s[2]].name));
+        });
+        d.appendChild(ol); lists.appendChild(d);
+      });
+      det.appendChild(lists);
+      card.appendChild(det);
+      container.appendChild(card);
+
+      this.hoverT = null;
+      audio.addEventListener('play', function () {
+        players.forEach(function (p) { if (p !== self && !p.audio.paused) p.audio.pause(); });
+        self.loop();
+      });
+      ['timeupdate', 'seeked', 'pause', 'loadedmetadata'].forEach(function (e) { audio.addEventListener(e, function () { self.draw(); }); });
+
+      function tAt(evt) {
+        var r = canvas.getBoundingClientRect();
+        var x = evt.clientX - r.left;
+        var g = self.geom;
+        return Math.min(ex.duration_sec, Math.max(0, (x - g.x0) / g.w * ex.duration_sec));
+      }
+      canvas.addEventListener('click', function (evt) {
+        var t = tAt(evt);
+        try { audio.currentTime = t; } catch (e) {}
+        if (audio.paused) { var pr = audio.play(); if (pr && pr.catch) pr.catch(function () {}); }
+      });
+      canvas.addEventListener('pointermove', function (evt) {
+        if (evt.pointerType === 'touch') return;
+        var r = canvas.getBoundingClientRect();
+        var x = evt.clientX - r.left;
+        if (x < self.geom.x0) { self.hideTip(); return; }
+        self.hoverT = tAt(evt);
+        self.showTip(x);
+        self.draw();
+      });
+      canvas.addEventListener('pointerleave', function () { self.hideTip(); });
+
+      this.resize();
+    }
+
+    Clip.prototype.hideTip = function () { this.hoverT = null; this.tip.classList.remove('show'); this.draw(); };
+
+    Clip.prototype.showTip = function (x) {
+      var ex = this.ex, t = this.hoverT;
+      var i = Math.min(ex.probs.length - 1, Math.floor(t * ex.fps));
+      var pr = ex.probs[i];
+      var gt = segAt(ex.gt_segments, t), pd = segAt(ex.pred_segments, t);
+      var sw = function (k) { return '<span class="swatch' + (k === 'unknown' ? ' unknown' : '') + '"' + (k === 'unknown' ? '' : ' style="background:var(' + CLASS[k].v + ')"') + '></span>'; };
+      var top = ORDER.map(function (k, j) { return [k, pr[j]]; }).sort(function (a, b) { return b[1] - a[1]; });
+      var html = '<div class="row"><span class="k">Time</span>' + fmt(t) + '</div>' +
+        '<div class="row"><span class="k">Annotation</span>' + sw(gt) + CLASS[gt].name + '</div>' +
+        '<div class="row"><span class="k">Prediction</span>' + sw(pd) + CLASS[pd].name + '</div>' +
+        '<div class="row"><span class="k">Top prob.</span>' + sw(top[0][0]) + CLASS[top[0][0]].name + ' ' + Math.round(top[0][1] * 100) + '%</div>';
+      this.tip.innerHTML = html;
+      this.tip.classList.add('show');
+      var vw = this.canvas.clientWidth, tw = this.tip.offsetWidth;
+      var left = x + 14; if (left + tw > vw) left = x - tw - 14; if (left < 0) left = 0;
+      this.tip.style.left = left + 'px';
+      this.tip.style.top = (this.geom.H + 4) + 'px';
+    };
+
+    Clip.prototype.resize = function () {
+      var c = this.canvas, dpr = window.devicePixelRatio || 1;
+      var W = c.clientWidth || c.parentNode.clientWidth;
+      var narrow = W < 480;
+      var x0 = narrow ? LABEL_W_NARROW : LABEL_W;
+      var y = PAD_TOP, rows = {};
+      ROWS.forEach(function (r) {
+        if (narrow) y += 14; // label above row
+        rows[r.key] = { y: y, h: r.h };
+        y += r.h + GAP;
+      });
+      var H = y - GAP + AXIS_H;
+      c.style.height = H + 'px';
+      c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+      this.geom = { W: W, H: H, x0: x0, w: W - x0 - 2, rows: rows, narrow: narrow, dpr: dpr };
+      this.draw();
+    };
+
+    Clip.prototype.loop = function () {
+      var self = this;
+      if (this.raf) return;
+      var step = function () {
+        self.draw();
+        if (!self.audio.paused && !self.audio.ended) self.raf = requestAnimationFrame(step); else self.raf = null;
+      };
+      this.raf = requestAnimationFrame(step);
+    };
+
+    Clip.prototype.draw = function () {
+      var g = this.geom; if (!g) return;
+      var ex = this.ex, c = this.canvas, ctx = c.getContext('2d');
+      var col = {}; ORDER.concat(['unknown']).forEach(function (k) { col[k] = css(CLASS[k].v); });
+      var surface = css('--surface'), muted = css('--muted'), grid = css('--grid'), fg = css('--fg'), play = css('--playhead');
+      ctx.setTransform(g.dpr, 0, 0, g.dpr, 0, 0);
+      ctx.clearRect(0, 0, g.W, g.H);
+      ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textBaseline = 'middle';
+      var X = function (t) { return g.x0 + t / ex.duration_sec * g.w; };
+
+      // row labels
+      ROWS.forEach(function (r) {
+        var R = g.rows[r.key];
+        ctx.fillStyle = muted; ctx.textAlign = 'left';
+        if (g.narrow) ctx.fillText(r.label, 0, R.y - 8);
+        else ctx.fillText(r.label, 0, R.y + R.h / 2);
+      });
+
+      // time grid
+      var stepS = g.w < 360 ? 30 : 15;
+      ctx.strokeStyle = grid; ctx.lineWidth = 1;
+      var axisY = g.H - AXIS_H;
+      for (var s = 0; s <= ex.duration_sec + 0.01; s += stepS) {
+        var gx = Math.round(X(s)) + 0.5;
+        ctx.beginPath(); ctx.moveTo(gx, PAD_TOP); ctx.lineTo(gx, axisY); ctx.stroke();
+        ctx.fillStyle = muted;
+        ctx.textAlign = s === 0 ? 'left' : (s >= ex.duration_sec - 0.01 ? 'right' : 'center');
+        ctx.fillText(fmt(ex.source_offset_sec + s), X(s), axisY + 12);
+      }
+
+      // segment bands
+      function band(segs, R) {
+        segs.forEach(function (sg) {
+          var x1 = X(sg[0]), x2 = X(sg[1]);
+          var w = Math.max(0, x2 - x1 - (sg[1] < ex.duration_sec ? 2 : 0)); // 2px surface gap
+          if (w <= 0) return;
+          if (sg[2] === 'unknown') {
+            ctx.save(); ctx.beginPath(); ctx.rect(x1, R.y, w, R.h); ctx.clip();
+            ctx.strokeStyle = col.unknown; ctx.lineWidth = 1.5;
+            for (var hx = x1 - R.h; hx < x1 + w; hx += 4) { ctx.beginPath(); ctx.moveTo(hx, R.y + R.h); ctx.lineTo(hx + R.h, R.y); ctx.stroke(); }
+            ctx.restore();
+            return;
+          }
+          ctx.fillStyle = col[sg[2]];
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(x1, R.y, w, R.h, Math.min(4, w / 2)); else ctx.rect(x1, R.y, w, R.h);
+          ctx.fill();
+          var label = CLASS[sg[2]].name;
+          var tw = ctx.measureText(label).width;
+          if (w > tw + 12) {
+            ctx.fillStyle = inkOn(col[sg[2]]); ctx.textAlign = 'left';
+            ctx.fillText(label, x1 + 6, R.y + R.h / 2 + 0.5);
+          }
+        });
+      }
+      band(ex.gt_segments, g.rows.gt);
+      band(ex.pred_segments, g.rows.pred);
+
+      // stacked probability strip
+      var R = g.rows.prob, n = ex.probs.length, colW = g.w / n;
+      var base = new Float32Array(n);
+      ORDER.forEach(function (k, j) {
+        ctx.fillStyle = col[k];
+        ctx.beginPath();
+        for (var i = 0; i < n; i++) {
+          var v = ex.probs[i][j];
+          if (v <= 0.002) { base[i] += v; continue; }
+          var y1 = R.y + R.h - (base[i] + v) * R.h;
+          ctx.rect(g.x0 + i * colW, y1, colW + 0.6, v * R.h);
+          base[i] += v;
+        }
+        ctx.fill();
+      });
+
+      // hover line
+      if (this.hoverT != null) {
+        var hx2 = Math.round(X(this.hoverT)) + 0.5;
+        ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(hx2, PAD_TOP); ctx.lineTo(hx2, axisY); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // playhead
+      var t = this.audio.currentTime || 0;
+      if (t > 0 || !this.audio.paused) {
+        var px = Math.round(X(Math.min(t, ex.duration_sec)));
+        ctx.fillStyle = surface; ctx.fillRect(px - 2, PAD_TOP - 2, 4, axisY - PAD_TOP + 4);
+        ctx.fillStyle = play; ctx.fillRect(px - 1, PAD_TOP - 2, 2, axisY - PAD_TOP + 4);
+      }
+    };
+
+    fetch('assets/data/examples.json')
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (data) {
+        var box = document.getElementById('clips');
+        box.innerHTML = '';
+        data.examples.forEach(function (ex) { players.push(new Clip(ex, box)); });
+        var rt;
+        window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { players.forEach(function (p) { p.resize(); }); }, 100); });
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        var redraw = function () { players.forEach(function (p) { p.draw(); }); };
+        if (mq.addEventListener) mq.addEventListener('change', redraw); else if (mq.addListener) mq.addListener(redraw);
+      })
+      .catch(function () {
+        document.getElementById('clips').innerHTML = '<p class="note">The examples could not be loaded.</p>';
+      });
+  })();
+  </script>
 </body>
 </html>
