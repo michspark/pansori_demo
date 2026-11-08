@@ -156,7 +156,11 @@
     th:first-child, td:first-child { text-align: left; }
     thead th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
     thead th .ko { display: block; font-weight: 400; }
-    tr.ens td { font-weight: 700; }
+    tr.ens td { border-top: 2px solid var(--border); }
+    h3.split { margin: 1.75rem 0 0.25rem; font-size: 1.05rem; }
+    .split-desc { margin: 0 0 0.5rem; }
+    .reps, .findings { margin: 0 0 1rem; padding-left: 1.2rem; }
+    .reps li, .findings li { margin-bottom: 0.35rem; }
     .best { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
     .note { color: var(--muted); font-size: 0.86rem; margin-top: 0.75rem; }
 
@@ -199,16 +203,29 @@
       <h2>Overview</h2>
       <p>
         A pansori performance moves between musical modes (<i>jo</i>, 조) as the story unfolds, and between sung
-        passages and spoken narration. Our model labels <b>every frame</b> of a recording with the mode being
-        performed, so mode-change boundaries fall out of the frame sequence instead of being predicted directly.
+        passages and spoken narration; the mode can shift several times within a single <i>daemok</i> (narrative
+        passage). We therefore treat mode classification as <b>frame-level sequence labeling</b>: the model labels every
+        frame of a recording, so mode-change boundaries fall out of the frame sequence.
       </p>
       <p>
-        We compare seven input representations under one training pipeline, with identical splits and metrics:
-        waveform-derived (mel spectrogram, CQT, chroma), pitch contours (PESTO, CREPE), symbolic (a transcribed-MIDI
-        piano roll) and self-supervised features (CultureMERT-95M). The representations are complementary, and a
-        weighted soft vote across them works best. The examples below use the <b>Mel + PESTO + MIDI</b> ensemble.
-        Each stream runs at its own frame rate, so all three are pooled onto the slowest (MIDI, 10&nbsp;fps) before voting.
+        The corpus has 396 tracks (46&nbsp;h&nbsp;02&nbsp;m) covering all five canonical <i>batang</i>, annotated at the
+        frame level by a co-author with a Ph.D. in pansori performance and theory. Because pansori mode is defined by
+        scale, ornamentation and vocal timbre together, we train one CRNN-style model per input representation, each
+        tied to a different dimension of mode:
       </p>
+      <ul class="reps">
+        <li><b>Mel spectrogram</b>: vocal timbre and articulation. Trained on the original audio (Mel-Original) and on
+          Demucs-separated vocals (Mel-Sep).</li>
+        <li><b>F0 contour</b> (PESTO): micro-pitch ornaments such as vibrato, bent notes and gliding tones.</li>
+        <li><b>MIDI piano roll</b>, transcribed from the separated vocals: the scale-theoretic skeleton.</li>
+        <li><b>CultureMERT-95M</b>: a self-supervised encoder pre-trained on multi-cultural music, fine-tuned from layer 8.</li>
+      </ul>
+      <p>
+        The ensemble averages the softmax outputs of Mel-Sep, MIDI and PESTO frame by frame, one component per
+        theoretical axis of mode. We present it as an analytical instrument rather than a higher-accuracy system:
+        where its components disagree, the disagreement can be read musicologically.
+      </p>
+      <p>The seven annotated categories are collapsed into four classes:</p>
       <ul class="classes" aria-label="Classes">
         <li><span class="name"><span class="swatch" style="background:var(--c-ujo)"></span>Ujo <span class="ko">우조</span></span>
           <span class="desc">Originating from aristocratic vocal genres such as <i>gagok</i> and <i>sijo</i>, Ujo is associated with
@@ -240,35 +257,82 @@
         annotated mode, the middle band is the ensemble's prediction, and the bottom strip shows the ensemble's class
         probabilities. Click anywhere on the chart to jump to that moment.
       </p>
+      <p class="note">
+        These clips come from a demo ensemble built from the released checkpoints: Mel-Original, PESTO and MIDI,
+        weighted 0.5 / 0.1 / 0.4 and aligned on a 10&nbsp;fps grid. It differs from the paper's uniform
+        Mel-Sep + MIDI + PESTO ensemble, so the predictions here will not match the paper's figures exactly.
+      </p>
       <div class="legend" id="legend" aria-hidden="true"></div>
       <div id="clips"><p class="note">Loading examples…</p></div>
     </section>
 
     <section id="results">
       <h2>Results</h2>
-      <p class="lede">Frame-level results on the version-split test set (18 recordings, 101,683 frames at 10&nbsp;fps). Unknown frames are excluded.</p>
+      <p class="lede">
+        Masked macro-F1 (the unweighted mean over the four modes, with Unknown frames excluded) and per-class
+        frame-wise F1 on the shared 18-piece test set, under two split strategies designed to detect shortcut learning.
+        Results are from Table&nbsp;2 of the paper.
+      </p>
+      <h3 class="split">Daemok-Shared split</h3>
+      <p class="note split-desc">The same 18 <i>daemok</i> appear in training, sung by other singers: an upper bound when the composition is already familiar.</p>
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
-              <th scope="col">Model</th>
-              <th scope="col">Accuracy</th>
+              <th scope="col">Representation</th>
               <th scope="col">Macro F1</th>
-              <th scope="col">F1 Ujo<span class="ko">우조</span></th>
-              <th scope="col">F1 Gyemyeonjo<span class="ko">계면조</span></th>
-              <th scope="col">F1 Aniri<span class="ko">아니리</span></th>
-              <th scope="col">F1 Changjo<span class="ko">창조</span></th>
+              <th scope="col">Ujo<span class="ko">우조</span></th>
+              <th scope="col">Gyemyeonjo<span class="ko">계면조</span></th>
+              <th scope="col">Aniri<span class="ko">아니리</span></th>
+              <th scope="col">Changjo<span class="ko">창조</span></th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>Mel</td><td>87.17%</td><td>0.863</td><td>0.773</td><td>0.893</td><td>0.973</td><td>0.812</td></tr>
-            <tr><td>PESTO (pitch contour)</td><td>79.29%</td><td>0.736</td><td>0.615</td><td>0.833</td><td>0.950</td><td>0.546</td></tr>
-            <tr><td>MIDI (transcribed)</td><td>77.03%</td><td>0.661</td><td>0.584</td><td>0.822</td><td>0.908</td><td>0.329</td></tr>
-            <tr class="ens"><td>Ensemble (Mel + PESTO + MIDI)</td><td class="best">87.93%</td><td class="best">0.876</td><td class="best">0.778</td><td class="best">0.901</td><td class="best">0.974</td><td class="best">0.851</td></tr>
+            <tr><td>Mel-Original</td><td class="best">0.871</td><td>0.777</td><td class="best">0.901</td><td class="best">0.975</td><td class="best">0.831</td></tr>
+            <tr><td>Mel-Sep</td><td>0.821</td><td class="best">0.783</td><td>0.899</td><td>0.972</td><td>0.632</td></tr>
+            <tr><td>F0 (PESTO)</td><td>0.743</td><td>0.667</td><td>0.838</td><td>0.960</td><td>0.508</td></tr>
+            <tr><td>MIDI</td><td>0.689</td><td>0.664</td><td>0.774</td><td>0.898</td><td>0.419</td></tr>
+            <tr><td>CultureMERT</td><td>0.696</td><td>0.538</td><td>0.829</td><td>0.864</td><td>0.551</td></tr>
+            <tr class="ens"><td>Ensemble (Mel-Sep + MIDI + PESTO)</td><td>0.862</td><td>0.777</td><td>0.896</td><td class="best">0.975</td><td>0.801</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="note">Ensemble weights: Mel 0.5, PESTO 0.1, MIDI 0.4. Underlined values are the best in each column. Song-stratified 10-fold results and the other representations are reported in the paper.</p>
+      <h3 class="split">Work-level split</h3>
+      <p class="note split-desc">Entire <i>daemok</i> are held out, with 10-fold cross-validation over the five <i>batang</i>: generalization to unseen repertoire.</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Representation</th>
+              <th scope="col">Macro F1</th>
+              <th scope="col">Ujo<span class="ko">우조</span></th>
+              <th scope="col">Gyemyeonjo<span class="ko">계면조</span></th>
+              <th scope="col">Aniri<span class="ko">아니리</span></th>
+              <th scope="col">Changjo<span class="ko">창조</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Mel-Original</td><td class="best">0.785</td><td class="best">0.734</td><td>0.872</td><td>0.962</td><td class="best">0.571</td></tr>
+            <tr><td>Mel-Sep</td><td>0.762</td><td>0.714</td><td>0.864</td><td class="best">0.968</td><td>0.504</td></tr>
+            <tr><td>F0 (PESTO)</td><td>0.683</td><td>0.615</td><td>0.826</td><td>0.947</td><td>0.343</td></tr>
+            <tr><td>MIDI</td><td>0.626</td><td>0.608</td><td>0.785</td><td>0.880</td><td>0.233</td></tr>
+            <tr><td>CultureMERT</td><td>0.539</td><td>0.424</td><td>0.745</td><td>0.805</td><td>0.175</td></tr>
+            <tr class="ens"><td>Ensemble (Mel-Sep + MIDI + PESTO)</td><td>0.748</td><td>0.730</td><td class="best">0.873</td><td>0.965</td><td>0.428</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Underlined values are the best in each column.</p>
+      <ul class="findings">
+        <li>Across Ujo, Gyemyeonjo and Aniri, F1 drops by only 2.1–3.6 points on average when entire works are held
+          out, so the models learn mode-relevant features rather than memorizing repertoire. The larger drop in
+          macro-F1 comes almost entirely from Changjo, which has only 1.8% of the labeled frames.</li>
+        <li>Source separation removes the drum cue that Changjo depends on. Mel-Sep stays within ±0.006 of Mel-Original
+          on the other three modes but loses 19.9 points on Changjo.</li>
+        <li>CultureMERT has the largest split gap in every column. It edges MIDI on the Daemok-Shared split but is the
+          weakest representation on the Work-level split, and it struggles most on Ujo and Changjo.</li>
+        <li>On the Daemok-Shared split the ensemble beats its best component (0.862 vs. 0.821), driven by Changjo. This
+          gain does not hold on the Work-level split (0.748 vs. 0.762), and neither ensemble surpasses Mel-Original.</li>
+      </ul>
     </section>
 
     <section id="citation">
