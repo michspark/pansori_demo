@@ -98,11 +98,24 @@
     p { margin: 0 0 1rem; }
     .lede { color: var(--muted); }
 
-    .classes { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.75rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
+    .classes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 0.75rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
     .classes li { border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 0.9rem; background: var(--surface); }
     .classes .name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
     .classes .ko { color: var(--muted); font-weight: 400; }
-    .classes .desc { display: block; margin-top: 0.25rem; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+    .classes .desc { display: block; margin-top: 0.35rem; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+    .classes .desc.merged { font-style: italic; }
+    .venue { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.95rem; }
+    .abstract { text-align: justify; hyphens: auto; }
+    @media (max-width: 600px) { .abstract { text-align: left; } }
+    .bib { position: relative; }
+    .bib pre { margin: 0; padding-right: 4.5rem; }
+    .copy {
+      position: absolute; top: 0.6rem; right: 0.6rem;
+      font: inherit; font-size: 0.8rem; font-weight: 600;
+      padding: 0.25rem 0.7rem; border-radius: 999px; cursor: pointer;
+      background: var(--bg); color: var(--accent); border: 1px solid var(--accent);
+    }
+    .copy:hover { background: var(--accent); color: var(--bg); }
     .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
     .swatch.unknown { background: repeating-linear-gradient(135deg, var(--unknown) 0 2px, transparent 2px 4px); border: 1px solid var(--unknown); }
 
@@ -156,14 +169,32 @@
   <header class="wrap">
     <h1>Frame-Level Pansori Mode Classification with Complementary Audio Representations</h1>
     <p class="authors">Sangheon Park, Seonguk Ju, Suin Chung, Danbinaerin Han, Dasaem Jeong</p>
+    <p class="venue">ISMIR 2026 &middot; Abu Dhabi, UAE</p>
     <nav class="links" aria-label="Project links">
-      <span title="Link will be added when the paper is public">Paper (coming soon)</span>
+      <a href="https://arxiv.org/abs/2608.06633">Paper (arXiv)</a>
       <a href="https://github.com/michspark/Pansori-Mode-Classification">Code</a>
       <a href="https://github.com/michspark/Pansori-Mode-Classification/releases/tag/v1.0">Data &amp; Weights</a>
     </nav>
   </header>
 
   <main class="wrap">
+    <section id="abstract">
+      <h2>Abstract</h2>
+      <p class="abstract">
+        Pansori is a traditional Korean vocal genre whose mode system (<i>jo</i>) is defined not by scale alone but by
+        the entanglement of pitch collection, microtonal ornament (<i>sigimsae</i>), and vocal timbre. In this study, we
+        introduce a 46-hour frame-level pansori mode annotation, expert-labeled across all five canonical <i>batang</i>,
+        and evaluate four complementary input representations (mel spectrogram, F0 contour, MIDI piano roll, and a
+        multi-cultural SSL encoder) under two split strategies designed to detect shortcut learning. Across the three
+        well-represented modes, performance degrades by only 2.1–3.6 points of F1 when entire works are held out,
+        indicating that the models learn mode-relevant features rather than memorizing repertoire. Per-class results
+        further show that source separation removes the percussion cue on which changjo depends, and that generic
+        multi-cultural pre-training fails specifically on the Ujo–Gyemyeonjo distinction. Qualitative analysis of
+        cross-modal disagreement recovers musicologically documented phenomena and agrees with published score-based
+        analyses of modern <i>changjak</i> pansori.
+      </p>
+    </section>
+
     <section id="overview">
       <h2>Overview</h2>
       <p>
@@ -180,11 +211,25 @@
       </p>
       <ul class="classes" aria-label="Classes">
         <li><span class="name"><span class="swatch" style="background:var(--c-ujo)"></span>Ujo <span class="ko">우조</span></span>
-          <span class="desc">Also covers gyeongdeureum, seolleongje and pyeongjo, which are folded into this class.</span></li>
-        <li><span class="name"><span class="swatch" style="background:var(--c-gyemyeonjo)"></span>Gyemyeonjo <span class="ko">계면조</span></span></li>
+          <span class="desc">Originating from aristocratic vocal genres such as <i>gagok</i> and <i>sijo</i>, Ujo is associated with
+            grandeur, heroism and masculine majesty, and typically accompanies depictions of noble characters or sweeping scenery.
+            It uses a sol-la-do-re-mi pentatonic scale and calls for a vigorous, commanding vocal production. Pitches are relatively
+            stable with broader and slower vibrato, melodic intervals are wider, and the robust acoustic texture of the voice is
+            itself a defining hallmark of the mode.</span>
+          <span class="desc merged">The minority modes Pyeongjo, Seollongje and Gyeongdeureum, which share Ujo&rsquo;s pentatonic
+            scale structure, are merged into this class.</span></li>
+        <li><span class="name"><span class="swatch" style="background:var(--c-gyemyeonjo)"></span>Gyemyeonjo <span class="ko">계면조</span></span>
+          <span class="desc">Rooted in the folk and shamanic ritual music of the southwestern Jeolla region, Gyemyeonjo is the most
+            prevalent mode in pansori and is used to express sorrow, lamentation and pathos. While structurally based on a
+            pentatonic collection (typically mi-la-do-re-mi), its identity rests far more on <i>sigimsae</i> (microtonal
+            ornaments) than on scale alone: a wide, intensely vibrating lowest note (<i>tteoneun-eum</i>), a stable middle note
+            (<i>pyeong-eum</i>), and an upper note that is sharply bent or smoothly glided downward (<i>kkeokneun-eum</i>).</span></li>
         <li><span class="name"><span class="swatch" style="background:var(--c-aniri)"></span>Aniri <span class="ko">아니리</span></span>
-          <span class="desc">Spoken narration between sung passages.</span></li>
-        <li><span class="name"><span class="swatch" style="background:var(--c-changjo)"></span>Changjo <span class="ko">창조</span></span></li>
+          <span class="desc">A non-modal category: the stylized speech-narration used to introduce dramatic context, deliver
+            dialogue, and provide emotional relaxation between high-tension sung sections.</span></li>
+        <li><span class="name"><span class="swatch" style="background:var(--c-changjo)"></span>Changjo <span class="ko">창조</span></span>
+          <span class="desc">A non-modal category: an intermediate form between sung passages and aniri that renders text in a
+            free, improvisatory recitative-like melody at moments of heightened dramatic tension.</span></li>
       </ul>
     </section>
 
@@ -226,13 +271,22 @@
       <p class="note">Ensemble weights: Mel 0.5, PESTO 0.1, MIDI 0.4. Underlined values are the best in each column. Song-stratified 10-fold results and the other representations are reported in the paper.</p>
     </section>
 
-    <section id="run">
-      <h2>Run it on your own recordings</h2>
-      <p>Pretrained checkpoints are on the <a href="https://github.com/michspark/Pansori-Mode-Classification/releases/tag/v1.0">release page</a>. Each script writes one row per frame and prints the contiguous mode segments:</p>
-<pre><code>python infer/infer_ensemble.py \
-    --mel song.wav --pesto song.f0.csv --midi song.mid \
-    --weights 0.5 0.1 0.4</code></pre>
-      <p class="note">See the <a href="https://github.com/michspark/Pansori-Mode-Classification#readme">README</a> for installation, feature extraction and training.</p>
+    <section id="citation">
+      <h2>Citation</h2>
+      <p>If you use this work, please cite:</p>
+      <div class="bib">
+<pre><code id="bibtex">@inproceedings{park2026pansori,
+  title     = {Frame-Level Pansori Mode Classification with Complementary Audio Representations},
+  author    = {Park, Sangheon and Ju, Seonguk and Chung, Suin and Han, Danbinaerin and Jeong, Dasaem},
+  booktitle = {Proceedings of the 27th International Society for Music Information Retrieval Conference (ISMIR)},
+  address   = {Abu Dhabi, UAE},
+  year      = {2026},
+  eprint    = {2608.06633},
+  archivePrefix = {arXiv},
+  url       = {https://arxiv.org/abs/2608.06633}
+}</code></pre>
+        <button type="button" class="copy" id="copy-bib">Copy</button>
+      </div>
     </section>
   </main>
 
@@ -491,6 +545,19 @@
         ctx.fillStyle = play; ctx.fillRect(px - 1, PAD_TOP - 2, 2, axisY - PAD_TOP + 4);
       }
     };
+
+    var copyBtn = document.getElementById('copy-bib');
+    copyBtn.addEventListener('click', function () {
+      var text = document.getElementById('bibtex').textContent;
+      var done = function () { copyBtn.textContent = 'Copied'; setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () {});
+      } else {
+        var r = document.createRange(); r.selectNodeContents(document.getElementById('bibtex'));
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        try { document.execCommand('copy'); done(); } catch (e) {}
+      }
+    });
 
     fetch('assets/data/examples.json')
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
